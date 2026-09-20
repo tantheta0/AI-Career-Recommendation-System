@@ -1,0 +1,369 @@
+{
+  "name": "AI career recommendation System",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Ai career recommendation system",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full name "
+            },
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email"
+            },
+            {
+              "fieldLabel": "Education level ",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "School"
+                  },
+                  {
+                    "option": "UG"
+                  },
+                  {
+                    "option": "PG"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Core skills"
+            },
+            {
+              "fieldLabel": "Interests"
+            },
+            {
+              "fieldLabel": "Preferred Industry"
+            },
+            {
+              "fieldLabel": "Career Goal "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -736,
+        0
+      ],
+      "id": "1837ab33-25c3-4f89-9078-c032ece921b1",
+      "name": "On form submission",
+      "webhookId": "04323c10-7427-4545-a277-6d0d1a4c86a1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "87f87714-2c17-439e-9ff0-bf2a1def5957",
+              "name": "name",
+              "value": "={{ $json['Full name '] }}",
+              "type": "string"
+            },
+            {
+              "id": "0df749e5-dd1a-483d-a26b-e5bc919c2042",
+              "name": "email",
+              "value": "={{$json[\"Email\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "93413cd9-f2b6-4dc2-9866-d48e778cc20e",
+              "name": "education_level",
+              "value": "={{ $json['Education level '] }}",
+              "type": "string"
+            },
+            {
+              "id": "147b23ba-a100-4fab-849a-5bb3e45dfa06",
+              "name": "skills",
+              "value": "={{$json[\"Core skills\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "9b4397dd-488b-44a7-b615-9060e1403854",
+              "name": "interests",
+              "value": "={{$json[\"Interests\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "89f25fb4-8c05-4065-b5b1-46bb302b9a13",
+              "name": "preferred_industry",
+              "value": "={{$json[\"Preferred Industry\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "f609623f-310c-4b4f-a58e-593b62636078",
+              "name": "career_goal",
+              "value": "={{ $json['Career Goal '] }}",
+              "type": "string"
+            },
+            {
+              "id": "720fa423-4813-41dd-9c59-85ee931d70c8",
+              "name": "submission_date",
+              "value": "={{$now}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        -16
+      ],
+      "id": "a2b74b44-3dba-4e35-8e13-328edaf3406b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Step 1: Get the raw text from Gemini\nlet rawText = items[0].json.content.parts[0].text || \"\";\n\n// Step 2: Remove the triple backticks and \"json\" if present\nrawText = rawText.replace(/```json\\s*|```/g, \"\");\n\n// Step 3: Parse the JSON string\nlet parsed = {};\ntry {\n  parsed = JSON.parse(rawText);\n} catch (e) {\n  console.error(\"Failed to parse Gemini JSON:\", e);\n}\n\n// Step 4: Return the fields safely\nreturn [{\n  json: {\n    career_recommendations: parsed.career_recommendations || [],\n    skill_gaps: parsed.skill_gaps || [],\n    next_steps: parsed.next_steps || []\n  }\n}];\n\n\n\n\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1284ad22-09bf-401b-a2b5-5be4934035e6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "AI Career Recommendations"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $('Edit Fields').item.json.submission_date }}",
+            "Name": "={{ $('Edit Fields').item.json.name }}",
+            "Skills": "={{ $('Edit Fields').item.json.skills }}",
+            "Interests": "={{ $('Edit Fields').item.json.interests }}",
+            "Skill Gaps": "={{$json.skill_gaps}}",
+            "Next Steps": "={{ $json.next_steps }}",
+            "Education Level": "={{ $('Edit Fields').item.json.education_level }}",
+            "Career Recommendations": "={{ $json.career_recommendations }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education Level",
+              "displayName": "Education Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skills",
+              "displayName": "Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Interests",
+              "displayName": "Interests",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Career Recommendations",
+              "displayName": "Career Recommendations",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skill Gaps",
+              "displayName": "Skill Gaps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Steps",
+              "displayName": "Next Steps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "9b64dddd-135e-42fd-9859-babd0fd44430",
+      "name": "Append row in sheet"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Edit Fields').item.json.email }}",
+        "subject": "Your AI Career Recommendations",
+        "emailType": "text",
+        "message": "=Hi {{ $json.Name }},\n\nCareer Recommendations:\n- {{ $('Code in JavaScript').item.json.career_recommendations.join(\"\\n- \") }}\n\nSkill Gaps:\n- {{ $json['Skill Gaps'].join(\"\\n- \") }}\n\nNext Steps:\n-{{ $json['Next Steps'].join(\"\\n- \") }}\n\nBest,\nAI Career Guidance System\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e640b673-581f-4042-8fb7-5cc014028135",
+      "name": "Send a message",
+      "webhookId": "2f7664f5-84ab-41bf-9a7f-65a7bbe880a3"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an AI career guidance system.\n\nBased on the student profile below, generate career guidance.\n\nStudent Profile:\nName: {{ $json.name }}\nEducation Level: {{ $json.education_level }}\nSkills: {{ $json.skills }}\nInterests: {{ $json.interests }}\nCareer Goal: {{ $json.career_goal }}\n\nReturn ONLY valid JSON in the following format:\n\n{\n  \"career_recommendations\": [\"...\", \"...\"],\n  \"skill_gaps\": [\"...\", \"...\"],\n  \"next_steps\": [\"...\", \"...\"]\n}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        -16
+      ],
+      "id": "29ef2f17-af5d-4826-9254-9ee6bcb8537c",
+      "name": "Message a model"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {},
+  "triggerCount": 0,
+  "meta": {}
+}
